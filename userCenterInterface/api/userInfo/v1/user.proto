@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package userCenterInterface.api.userInfo.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "userCenterInterface/api/userInfo/v1;v1";
+option java_multiple_files = true;
+option java_package = "userCenterInterface.api.userInfo.v1";
+
+service User {
+	rpc CreateUser (CreateUserRequest) returns (CreateUserReply){
+		option ( google.api.http ) = {
+			post: "/user",
+			body: "*"
+		};
+	};
+	rpc UpdateUser (UpdateUserRequest) returns (UpdateUserReply){
+		option ( google.api.http ) = {
+			put: "/user/{id}",
+			body: "*"
+		};
+	};
+	rpc DeleteUser (DeleteUserRequest) returns (DeleteUserReply){
+		option ( google.api.http ) = {
+			delete: "/user/{id}",
+		};
+	};
+	rpc GetUser (GetUserRequest) returns (GetUserReply){
+		option ( google.api.http ) = {
+			get: "/user/{id}",
+		};
+	};
+	rpc ListUser (ListUserRequest) returns (ListUserReply){
+		option ( google.api.http ) = {
+			get: "/user"
+		};
+	};
+}
+
+message CreateUserRequest {}
+message CreateUserReply {}
+
+message UpdateUserRequest {
+	int64 id = 1;
+}
+message UpdateUserReply {}
+
+message DeleteUserRequest {
+	int64 id = 1;
+}
+message DeleteUserReply {}
+
+message GetUserRequest {
+	int64 id = 1;
+}
+message GetUserReply {
+	int64 id = 1;
+}
+
+message ListUserRequest {}
+message ListUserReply {}

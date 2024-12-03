@@ -4,6 +4,7 @@ import (
 	"moonChat/userCenter/internal/conf"
 	"moonChat/userCenter/internal/service"
 	v1 "moonChat/userCenterInterface/api/helloworld/v1"
+	user_v1 "moonChat/userCenterInterface/api/userInfo/v1"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -11,7 +12,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, userService *service.UserService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -28,5 +29,7 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.L
 	}
 	srv := http.NewServer(opts...)
 	v1.RegisterGreeterHTTPServer(srv, greeter)
+	user_v1.RegisterUserHTTPServer(srv, userService)
+
 	return srv
 }
