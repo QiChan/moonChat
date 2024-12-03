@@ -3,57 +3,18 @@
 
 openapi: 3.0.3
 info:
-    title: User API
+    title: Greeter API
+    description: The greeting service definition.
     version: 0.0.1
 paths:
-    /user:
+    /helloworld/{name}:
         get:
             tags:
-                - User
-            operationId: User_ListUser
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ListUserReply'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
-        post:
-            tags:
-                - User
-            operationId: User_CreateUser
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/CreateUserRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/CreateUserReply'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
-    /user/{id}:
-        get:
-            tags:
-                - User
-            operationId: User_GetUser
+                - Greeter
+            description: Sends a greeting
+            operationId: Greeter_SayHello
             parameters:
-                - name: id
+                - name: name
                   in: path
                   required: true
                   schema:
@@ -64,59 +25,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/GetUserReply'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
-        put:
-            tags:
-                - User
-            operationId: User_UpdateUser
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/UpdateUserRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/UpdateUserReply'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
-        delete:
-            tags:
-                - User
-            operationId: User_DeleteUser
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/DeleteUserReply'
+                                $ref: '#/components/schemas/HelloReply'
                 default:
                     description: Default error response
                     content:
@@ -125,20 +34,6 @@ paths:
                                 $ref: '#/components/schemas/Status'
 components:
     schemas:
-        CreateUserReply:
-            type: object
-            properties: {}
-        CreateUserRequest:
-            type: object
-            properties: {}
-        DeleteUserReply:
-            type: object
-            properties: {}
-        GetUserReply:
-            type: object
-            properties:
-                id:
-                    type: string
         GoogleProtobufAny:
             type: object
             properties:
@@ -147,9 +42,12 @@ components:
                     description: The type of the serialized message.
             additionalProperties: true
             description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
-        ListUserReply:
+        HelloReply:
             type: object
-            properties: {}
+            properties:
+                message:
+                    type: string
+            description: The response message containing the greetings
         Status:
             type: object
             properties:
@@ -166,13 +64,5 @@ components:
                         $ref: '#/components/schemas/GoogleProtobufAny'
                     description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
             description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
-        UpdateUserReply:
-            type: object
-            properties: {}
-        UpdateUserRequest:
-            type: object
-            properties:
-                id:
-                    type: string
 tags:
-    - name: User
+    - name: Greeter
