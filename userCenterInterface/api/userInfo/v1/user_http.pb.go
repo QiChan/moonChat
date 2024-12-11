@@ -38,7 +38,7 @@ func RegisterUserHTTPServer(s *http.Server, srv UserHTTPServer) {
 	r.POST("/user", _User_CreateUser0_HTTP_Handler(srv))
 	r.PUT("/user/{id}", _User_UpdateUser0_HTTP_Handler(srv))
 	r.DELETE("/user/{id}", _User_DeleteUser0_HTTP_Handler(srv))
-	r.GET("/user/{id}", _User_GetUser0_HTTP_Handler(srv))
+	r.GET("/user/{tag}", _User_GetUser0_HTTP_Handler(srv))
 	r.GET("/user", _User_ListUser0_HTTP_Handler(srv))
 }
 
@@ -196,7 +196,7 @@ func (c *UserHTTPClientImpl) DeleteUser(ctx context.Context, in *DeleteUserReque
 
 func (c *UserHTTPClientImpl) GetUser(ctx context.Context, in *GetUserRequest, opts ...http.CallOption) (*GetUserReply, error) {
 	var out GetUserReply
-	pattern := "/user/{id}"
+	pattern := "/user/{tag}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationUserGetUser))
 	opts = append(opts, http.PathTemplate(pattern))

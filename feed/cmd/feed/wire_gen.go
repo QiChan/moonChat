@@ -12,8 +12,10 @@ import (
 	"moonChat/feed/internal/biz"
 	"moonChat/feed/internal/conf"
 	"moonChat/feed/internal/data"
+	"moonChat/feed/internal/mq"
 	"moonChat/feed/internal/server"
 	"moonChat/feed/internal/service"
+	"moonChat/mqInterface/api/msgQueue/v1"
 )
 
 import (
@@ -29,7 +31,9 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 		return nil, nil, err
 	}
 	greeterRepo := data.NewGreeterRepo(dataData, logger)
-	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, logger)
+	v1MQ := v1.NewMQ()
+	greeterMQ := mq.NewGreeterMQ(v1MQ, logger)
+	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, greeterMQ, logger)
 	greeterService := service.NewGreeterService(greeterUsecase)
 	grpcServer := server.NewGRPCServer(confServer, greeterService, logger)
 	httpServer := server.NewHTTPServer(confServer, greeterService, logger)

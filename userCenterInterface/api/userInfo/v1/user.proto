@@ -28,7 +28,7 @@ service User {
 	};
 	rpc GetUser (GetUserRequest) returns (GetUserReply){
 		option ( google.api.http ) = {
-			get: "/user/{id}",
+			get: "/user/{tag}",
 		};
 	};
 	rpc ListUser (ListUserRequest) returns (ListUserReply){
@@ -52,10 +52,10 @@ message DeleteUserRequest {
 message DeleteUserReply {}
 
 message GetUserRequest {
-	int64 id = 1;
+	string tag = 1;
 }
 message GetUserReply {
-	int64 id = 1;
+	string tag = 1;
 	string msg = 2;
 }
 

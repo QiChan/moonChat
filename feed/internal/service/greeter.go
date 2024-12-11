@@ -16,6 +16,7 @@ type GreeterService struct {
 
 // NewGreeterService new a greeter service.
 func NewGreeterService(uc *biz.GreeterUsecase) *GreeterService {
+	uc.ActiveProducer(context.Background())
 	return &GreeterService{uc: uc}
 }
 
@@ -25,5 +26,6 @@ func (s *GreeterService) SayHello(ctx context.Context, in *v1.HelloRequest) (*v1
 	if err != nil {
 		return nil, err
 	}
+	s.uc.PublishMsg(ctx, in.Name)
 	return &v1.HelloReply{Message: "Hello " + g.Hello}, nil
 }

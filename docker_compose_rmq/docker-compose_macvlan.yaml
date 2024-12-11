@@ -1,0 +1,62 @@
+services:
+  namesrv:
+    image: apache/rocketmq:5.3.1
+    container_name: rmqnamesrv
+    ports:
+      - 9876:9876
+    networks:
+      macvlan_network:
+        ipv4_address: 192.168.2.157  # 这里的IP地址需要根据你macvlan网络的网段来分配，自行调整
+    command: sh mqnamesrv
+  broker:
+    image: apache/rocketmq:5.3.1
+    container_name: rmqbroker
+    ports:
+      - 10909:10909
+      - 10911:10911
+      - 10912:10912
+    environment:
+      - NAMESRV_ADDR=rmqnamesrv:9876
+    depends_on:
+      - namesrv
+    networks:
+      macvlan_network:
+        ipv4_address: 192.168.2.158  # 根据实际网段分配，自行调整
+        aliases:
+          - broker-external
+    command: sh mqbroker
+  proxy:
+    image: apache/rocketmq:5.3.1
+    container_name: rmqproxy
+    networks:
+      macvlan_network:
+        ipv4_address: 192.168.2.159  # 根据实际网段分配，自行调整
+    depends_on:
+      - broker
+      - namesrv
+    ports:
+      - 8082:8082
+      - 8081:8081
+    restart: on-failure
+    environment:
+      - NAMESRV_ADDR=rmqnamesrv:9876
+    command: sh mqproxy
+  console:
+    image: styletang/rocketmq-console-ng
+    container_name: rocketmq-console
+    ports:
+      - 8080:8080
+    environment:
+      - JAVA_OPTS=-Drocketmq.namesrv.addr=namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false
+    depends_on:
+      - namesrv
+      - broker
+networks:
+  macvlan_network:
+    driver: macvlan
+    driver_opts:
+      parent: macvlan0  # 替换为你宿主机上实际创建的macvlan网络接口名称
+    ipam:
+      config:
+        - subnet: 192.168.2.128/25  # 根据实际规划的网段来填写，自行调整
+          gateway: 192.168.2.129

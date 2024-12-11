@@ -9,9 +9,11 @@ package main
 import (
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
+	"moonChat/mqInterface/api/msgQueue/v1"
 	"moonChat/userCenter/internal/biz"
 	"moonChat/userCenter/internal/conf"
 	"moonChat/userCenter/internal/data"
+	"moonChat/userCenter/internal/mq"
 	"moonChat/userCenter/internal/server"
 	"moonChat/userCenter/internal/service"
 )
@@ -32,7 +34,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, logger)
 	greeterService := service.NewGreeterService(greeterUsecase)
 	grpcServer := server.NewGRPCServer(confServer, greeterService, logger)
-	userService := service.NewUserService()
+	userRepo := data.NewUserRepo(dataData, logger)
+	v1MQ := v1.NewMQ()
+	userMQ := mq.NewUserMQ(v1MQ, logger)
+	userUsecase := biz.NewUserUsecase(userRepo, userMQ, logger)
+	userService := service.NewUserService(userUsecase)
 	httpServer := server.NewHTTPServer(confServer, greeterService, userService, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {

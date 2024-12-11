@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   consul:
     container_name: consul

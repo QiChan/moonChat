@@ -28,19 +28,41 @@ type GreeterRepo interface {
 	ListAll(context.Context) ([]*Greeter, error)
 }
 
+type GreeterMQ interface {
+	SndMsg(context.Context, string, string, string) (string, error)
+	DealMsg(context.Context, string) error
+	ProducerStart(context.Context) error
+	ConsumerStart(context.Context) error
+}
+
 // GreeterUsecase is a Greeter usecase.
 type GreeterUsecase struct {
 	repo GreeterRepo
+	mq   GreeterMQ
 	log  *log.Helper
 }
 
 // NewGreeterUsecase new a Greeter usecase.
-func NewGreeterUsecase(repo GreeterRepo, logger log.Logger) *GreeterUsecase {
-	return &GreeterUsecase{repo: repo, log: log.NewHelper(logger)}
+func NewGreeterUsecase(repo GreeterRepo, mq GreeterMQ, logger log.Logger) *GreeterUsecase {
+	return &GreeterUsecase{repo: repo, mq: mq, log: log.NewHelper(logger)}
 }
 
 // CreateGreeter creates a Greeter, and returns the new Greeter.
 func (uc *GreeterUsecase) CreateGreeter(ctx context.Context, g *Greeter) (*Greeter, error) {
 	uc.log.WithContext(ctx).Infof("CreateGreeter: %v", g.Hello)
 	return uc.repo.Save(ctx, g)
+}
+
+func (uc *GreeterUsecase) ActiveProducer(ctx context.Context) {
+	uc.mq.ProducerStart(ctx)
+	//uc.mq.SndMsg(ctx, "test", "Hello RocketMQ Go Client!")
+}
+
+func (uc *GreeterUsecase) ActiveConsumer(ctx context.Context) {
+	uc.mq.DealMsg(ctx, "test")
+	uc.mq.ConsumerStart(ctx)
+}
+
+func (uc *GreeterUsecase) PublishMsg(ctx context.Context, tag string) {
+	uc.mq.SndMsg(ctx, "test", "Hello RocketMQ Go Client!", tag)
 }

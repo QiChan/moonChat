@@ -5,6 +5,7 @@ import (
 	"log"
 
 	v1 "moonChat/feedInterface/api/helloworld/v1"
+	"moonChat/userCenter/internal/biz"
 	pb "moonChat/userCenterInterface/api/userInfo/v1"
 
 	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
@@ -14,10 +15,13 @@ import (
 
 type UserService struct {
 	pb.UnimplementedUserServer
+
+	uc *biz.UserUsecase
 }
 
-func NewUserService() *UserService {
-	return &UserService{}
+func NewUserService(uc *biz.UserUsecase) *UserService {
+	uc.ActiveConsumer(context.Background())
+	return &UserService{uc: uc}
 }
 
 func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserReply, error) {
@@ -47,16 +51,16 @@ func (s *UserService) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.
 	)
 
 	if err != nil {
-		return &pb.GetUserReply{Id: req.Id, Msg: "grpc连接feed服失败"}, nil
+		return &pb.GetUserReply{Tag: req.Tag, Msg: "grpc连接feed服失败"}, nil
 	}
 
 	client := v1.NewGreeterClient(conn)
-	resp, err := client.SayHello(ctx, &v1.HelloRequest{Name: "kratos"})
+	resp, err := client.SayHello(ctx, &v1.HelloRequest{Name: req.Tag})
 	if err != nil {
-		return &pb.GetUserReply{Id: req.Id, Msg: "grpc执行SayHello()失败"}, nil
+		return &pb.GetUserReply{Tag: req.Tag, Msg: "grpc执行SayHello()失败"}, nil
 	}
 
-	return &pb.GetUserReply{Id: req.Id, Msg: "grpc call from userCenter to feed success, resp: " + resp.Message}, nil
+	return &pb.GetUserReply{Tag: req.Tag, Msg: "grpc call from userCenter to feed success, resp: " + resp.Message}, nil
 }
 func (s *UserService) ListUser(ctx context.Context, req *pb.ListUserRequest) (*pb.ListUserReply, error) {
 	return &pb.ListUserReply{}, nil
