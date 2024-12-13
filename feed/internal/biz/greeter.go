@@ -29,7 +29,12 @@ type GreeterRepo interface {
 }
 
 type GreeterMQ interface {
-	SndMsg(context.Context, string, string, string) (string, error)
+	SndMsgSync(context.Context, string, string, string) (string, error)
+	SndMsgAsync(ctx context.Context, topic string, content string, tag string) error
+	SndMsgOneWay(ctx context.Context, topic string, content string, tag string) error
+	SndMsgBatch(ctx context.Context, topic string, content string, tag string) error
+	SndMsgOrderly(ctx context.Context, topic string, content string, tag string) error
+	SndMsgDelay(ctx context.Context, topic string, content string, tag string) error
 	DealMsg(context.Context, string) error
 	ProducerStart(context.Context) error
 	ConsumerStart(context.Context) error
@@ -64,5 +69,12 @@ func (uc *GreeterUsecase) ActiveConsumer(ctx context.Context) {
 }
 
 func (uc *GreeterUsecase) PublishMsg(ctx context.Context, tag string) {
-	uc.mq.SndMsg(ctx, "test", "Hello RocketMQ Go Client!", tag)
+	/*
+					uc.mq.SndMsgSync(ctx, "test", "Hello RocketMQ Go Client snd msg sync!", tag)
+				uc.mq.SndMsgOneWay(ctx, "test", "Hello RocketMQ Go Client snd msg one way!", tag)
+			uc.mq.SndMsgBatch(ctx, "test", "Hello RocketMQ Go Client snd msg batch!", tag)
+		uc.mq.SndMsgAsync(ctx, "test", "Hello RocketMQ Go Client snd msg asynccccccccccccccccccc!", "bbbbbbbbbbbbatch")
+		uc.mq.SndMsgOrderly(ctx, "orderlyTest", "Hello RocketMQ Go Client snd msg orderly!", tag)
+	*/
+	uc.mq.SndMsgDelay(ctx, "test", "Hello RocketMQ Go Client snd msg delay!", tag)
 }

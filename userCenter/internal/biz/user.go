@@ -18,6 +18,8 @@ type UserRepo interface {
 type UserMQ interface {
 	SndMsg(context.Context, string, string) (string, error)
 	DealMsg(context.Context, string) error
+	DealMsgWithTimeElapse(ctx context.Context, topic string) error
+	DealMsgOrderly(ctx context.Context, topic string) error
 	ProducerStart(context.Context) error
 	ConsumerStart(context.Context) error
 }
@@ -42,7 +44,9 @@ func (uc *UserUsecase) ActiveProducer(ctx context.Context) {
 }
 
 func (uc *UserUsecase) ActiveConsumer(ctx context.Context) {
-	uc.mq.DealMsg(ctx, "test")
+	//uc.mq.DealMsg(ctx, "test")
+	uc.mq.DealMsgWithTimeElapse(ctx, "test")
+	uc.mq.DealMsgOrderly(ctx, "orderlyTest")
 	uc.mq.ConsumerStart(ctx)
 }
 
