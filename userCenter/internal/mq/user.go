@@ -24,18 +24,7 @@ type userMQ struct {
 // NewGreeterRepo .
 func NewUserMQ(logger log.Logger) biz.UserMQ {
 	return &userMQ{
-		mq: v1.NewMQ(&v1.MQ_Config{
-			v1.Producer: nil,
-			v1.PushConsumer: &v1.MQ_Suber_Config{
-				GroupName:   "userCenterConsumer_test",
-				NameSvrAddr: "127.0.0.1:9876",
-			},
-			v1.ProducerOrderly: nil,
-			v1.ConsumerOrderly: &v1.MQ_Suber_Config{
-				GroupName:   "userCenterOrderlyConsumer_orderlyTest",
-				NameSvrAddr: "127.0.0.1:9876",
-			},
-		}),
+		mq:  v1.NewMQ(biz.MqConfig),
 		log: log.NewHelper(logger),
 	}
 }
@@ -113,34 +102,19 @@ func (r *userMQ) DealMsgOrderly(ctx context.Context, topic string) error {
 	return nil
 }
 
-func (r *userMQ) ProducerStart(ctx context.Context) error {
-	err := r.mq.Producer.Start()
+func (r *userMQ) DealMsgBroadCasting(ctx context.Context, topic string) error {
+	err := r.mq.BroadCastConsumer.Subscribe(topic, consumer.MessageSelector{}, func(ctx context.Context,
+		msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
+		fmt.Printf("subscribe callback: %v \n", msgs)
+		return consumer.ConsumeSuccess, nil
+	})
 	if err != nil {
-		fmt.Printf("start producer error: %s", err.Error())
-		return err
+		fmt.Println(err.Error())
 	}
-
-	err = r.mq.ProducerOrderly.Start()
-	if err != nil {
-		fmt.Printf("start producerOrderly error: %s", err.Error())
-		return err
-	}
-
 	return nil
 }
 
-func (r *userMQ) ConsumerStart(ctx context.Context) error {
-	err := r.mq.PushConsumer.Start()
-	if err != nil {
-		fmt.Printf("start consumer error: %s", err.Error())
-		return err
-	}
-
-	err = r.mq.ConsumerOrderly.Start()
-	if err != nil {
-		fmt.Printf("start consumerOrderly error: %s", err.Error())
-		return err
-	}
-
-	return nil
+func (r *userMQ) ClientsStart(ctx context.Context, config *v1.MQ_Config) error {
+	err := r.mq.StartAllCli(config)
+	return err
 }

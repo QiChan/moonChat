@@ -15,13 +15,17 @@ const (
 	PushConsumer
 	ProducerOrderly
 	ConsumerOrderly
+	TransProducer
+	BroadCastConsumer
 )
 
 type MQ struct {
-	Producer        rocketmq.Producer
-	PushConsumer    rocketmq.PushConsumer
-	ProducerOrderly rocketmq.Producer
-	ConsumerOrderly rocketmq.PushConsumer
+	Producer          rocketmq.Producer
+	PushConsumer      rocketmq.PushConsumer
+	ProducerOrderly   rocketmq.Producer
+	ConsumerOrderly   rocketmq.PushConsumer
+	TransProducer     rocketmq.TransactionProducer
+	BroadCastConsumer rocketmq.PushConsumer
 }
 
 type MQ_Config map[Suber]*MQ_Suber_Config
@@ -36,11 +40,13 @@ func NewMQ(c *MQ_Config) *MQ {
 	pc := newConsumer(c)
 	po := newOrderlyProducer(c)
 	co := newOrderlyConsumer(c)
+	bc := newBroadCastConsumer(c)
 	return &MQ{
-		Producer:        pd,
-		PushConsumer:    pc,
-		ProducerOrderly: po,
-		ConsumerOrderly: co,
+		Producer:          pd,
+		PushConsumer:      pc,
+		ProducerOrderly:   po,
+		ConsumerOrderly:   co,
+		BroadCastConsumer: bc,
 	}
 }
 
@@ -70,6 +76,7 @@ func newConsumer(cf *MQ_Config) rocketmq.PushConsumer {
 		//consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{"127.0.0.1:9876"})),
 		consumer.WithNameServer([]string{(*cf)[PushConsumer].NameSvrAddr}),
 		consumer.WithGroupName((*cf)[PushConsumer].GroupName),
+		consumer.WithConsumerModel(consumer.BroadCasting),
 	)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -114,4 +121,60 @@ func newOrderlyConsumer(cf *MQ_Config) rocketmq.PushConsumer {
 	}
 
 	return c
+}
+
+func newBroadCastConsumer(cf *MQ_Config) rocketmq.PushConsumer {
+	if (*cf)[BroadCastConsumer] == nil {
+		return nil
+	}
+	c, err := rocketmq.NewPushConsumer(
+		consumer.WithGroupName((*cf)[BroadCastConsumer].GroupName),
+		consumer.WithNameServer([]string{(*cf)[BroadCastConsumer].NameSvrAddr}),
+		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset),
+		consumer.WithConsumerModel(consumer.BroadCasting),
+	)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil
+	}
+
+	return c
+}
+
+// producer和consumer都是broker的cli
+func (r *MQ) StartOneCli(suber Suber) error {
+	var err error
+	switch suber {
+	case Producer:
+		err = r.Producer.Start()
+	case PushConsumer:
+		err = r.PushConsumer.Start()
+	case ProducerOrderly:
+		err = r.ProducerOrderly.Start()
+	case ConsumerOrderly:
+		err = r.ConsumerOrderly.Start()
+	case TransProducer:
+		err = r.TransProducer.Start()
+	case BroadCastConsumer:
+		err = r.BroadCastConsumer.Start()
+	}
+	if err != nil {
+		fmt.Printf("start %d error: %s", suber, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (r *MQ) StartAllCli(config *MQ_Config) error {
+	for k, v := range *config {
+		if v != nil {
+			if err := r.StartOneCli(k); err != nil {
+				panic(err)
+			}
+
+		}
+	}
+
+	return nil
 }

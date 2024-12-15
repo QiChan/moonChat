@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"moonChat/feed/internal/biz"
 	v1 "moonChat/mqInterface/api/msgQueue/v1"
 
+	"github.com/apache/rocketmq-client-go/v2"
 	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
+	"github.com/apache/rocketmq-client-go/v2/producer"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 )
@@ -23,21 +26,19 @@ type greeterMQ struct {
 
 // NewFeedMQ .
 func NewGreeterMQ(logger log.Logger) biz.GreeterMQ {
-	return &greeterMQ{
-		mq: v1.NewMQ(&v1.MQ_Config{
-			v1.Producer: &v1.MQ_Suber_Config{
-				GroupName:   "feedProducer_test",
-				NameSvrAddr: "127.0.0.1:9876",
-			},
-			v1.ProducerOrderly: &v1.MQ_Suber_Config{
-				GroupName:   "feedOrderlyProducer_test",
-				NameSvrAddr: "127.0.0.1:9876",
-			},
-			v1.PushConsumer:    nil,
-			v1.ConsumerOrderly: nil,
-		}),
+	tp, _ := rocketmq.NewTransactionProducer(
+		NewDemoListener(),
+		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{(*biz.MqConfig)[v1.TransProducer].NameSvrAddr})),
+		producer.WithRetry(2),
+	)
+
+	tmp := &greeterMQ{
+		mq:  v1.NewMQ(biz.MqConfig),
 		log: log.NewHelper(logger),
 	}
+	tmp.mq.TransProducer = tp
+
+	return tmp
 }
 
 func (r *greeterMQ) SndMsgSync(ctx context.Context, topic string, content string, tag string) (string, error) {
@@ -131,6 +132,36 @@ func (r *greeterMQ) SndMsgDelay(ctx context.Context, topic string, content strin
 	return nil
 }
 
+func (r *greeterMQ) SndMsgDelayAnyTime(ctx context.Context, topic string, content string, tag string, delayInterval int64) error {
+	for i := 0; i < 10; i++ {
+		msg := primitive.NewMessage(topic, []byte(content+strconv.Itoa(i)+" timestamp:"+strconv.FormatInt(time.Now().Unix(), 10)))
+		msg.WithDelayTimestamp(time.Now().Add(time.Duration(delayInterval) * time.Second)).WithTag(tag)
+		res, err := r.mq.Producer.SendSync(context.Background(), msg)
+
+		if err != nil {
+			fmt.Printf("send delay any time message error: %s\n", err)
+		} else {
+			fmt.Printf("send delay any time message success: result=%s\n", res.String())
+		}
+	}
+	return nil
+}
+
+func (r *greeterMQ) SndMsgTrans(ctx context.Context, topic string, content string, tag string) error {
+	for i := 0; i < 10; i++ {
+		res, err := r.mq.TransProducer.SendMessageInTransaction(context.Background(),
+			primitive.NewMessage(topic, []byte(content+strconv.Itoa(i))).WithTag(tag))
+
+		if err != nil {
+			fmt.Printf("send trans message error: %s\n", err)
+			return err
+		} else {
+			fmt.Printf("send trans message success: result=%s\n", res.String())
+		}
+	}
+	return nil
+}
+
 func (r *greeterMQ) DealMsg(ctx context.Context, topic string) error {
 	selector := consumer.MessageSelector{
 		Type:       consumer.TAG,
@@ -150,34 +181,7 @@ func (r *greeterMQ) DealMsg(ctx context.Context, topic string) error {
 	return nil
 }
 
-func (r *greeterMQ) ProducerStart(ctx context.Context) error {
-	err := r.mq.Producer.Start()
-	if err != nil {
-		fmt.Printf("start producer error: %s", err.Error())
-		return err
-	}
-
-	err = r.mq.ProducerOrderly.Start()
-	if err != nil {
-		fmt.Printf("start producerOrderly error: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (r *greeterMQ) ConsumerStart(ctx context.Context) error {
-	err := r.mq.PushConsumer.Start()
-	if err != nil {
-		fmt.Printf("start consumer error: %s", err.Error())
-		return err
-	}
-
-	err = r.mq.ConsumerOrderly.Start()
-	if err != nil {
-		fmt.Printf("start consumerOrderly error: %s", err.Error())
-		return err
-	}
-
-	return nil
+func (r *greeterMQ) ClientsStart(ctx context.Context, config *v1.MQ_Config) error {
+	err := r.mq.StartAllCli(config)
+	return err
 }

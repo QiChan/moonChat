@@ -3,6 +3,7 @@ module moonChat/userCenter
 go 1.23.3
 
 require (
+	github.com/apache/rocketmq-client-go/v2 v2.1.3-0.20240831071925-04229975b797
 	github.com/go-kratos/kratos/contrib/registry/consul/v2 v2.0.0-20241105072421-f8b97f675b32
 	github.com/go-kratos/kratos/v2 v2.8.2
 	github.com/google/uuid v1.4.0
@@ -17,7 +18,6 @@ require (
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/apache/rocketmq-client-go/v2 v2.1.2 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect

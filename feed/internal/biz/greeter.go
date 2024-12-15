@@ -3,7 +3,8 @@ package biz
 import (
 	"context"
 
-	v1 "moonChat/feedInterface/api/helloworld/v1"
+	w1 "moonChat/feedInterface/api/helloworld/v1"
+	v1 "moonChat/mqInterface/api/msgQueue/v1"
 
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -11,8 +12,27 @@ import (
 
 var (
 	// ErrUserNotFound is user not found.
-	ErrUserNotFound = errors.NotFound(v1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
+	EwrUserNotFound = errors.NotFound(w1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
 )
+
+// 改成从配置里读取
+var MqConfig = &v1.MQ_Config{
+	v1.Producer: &v1.MQ_Suber_Config{
+		GroupName:   "feedProducer_test",
+		NameSvrAddr: "127.0.0.1:9876",
+	},
+	v1.ProducerOrderly: &v1.MQ_Suber_Config{
+		GroupName:   "feedOrderlyProducer_test",
+		NameSvrAddr: "127.0.0.1:9876",
+	},
+	v1.TransProducer: &v1.MQ_Suber_Config{
+		GroupName:   "feedTransProducer_test",
+		NameSvrAddr: "127.0.0.1:9876",
+	},
+	v1.PushConsumer:      nil,
+	v1.ConsumerOrderly:   nil,
+	v1.BroadCastConsumer: nil,
+}
 
 // Greeter is a Greeter model.
 type Greeter struct {
@@ -35,9 +55,10 @@ type GreeterMQ interface {
 	SndMsgBatch(ctx context.Context, topic string, content string, tag string) error
 	SndMsgOrderly(ctx context.Context, topic string, content string, tag string) error
 	SndMsgDelay(ctx context.Context, topic string, content string, tag string) error
+	SndMsgTrans(ctx context.Context, topic string, content string, tag string) error
+	SndMsgDelayAnyTime(ctx context.Context, topic string, content string, tag string, delayInterval int64) error
 	DealMsg(context.Context, string) error
-	ProducerStart(context.Context) error
-	ConsumerStart(context.Context) error
+	ClientsStart(ctx context.Context, config *v1.MQ_Config) error
 }
 
 // GreeterUsecase is a Greeter usecase.
@@ -59,22 +80,18 @@ func (uc *GreeterUsecase) CreateGreeter(ctx context.Context, g *Greeter) (*Greet
 }
 
 func (uc *GreeterUsecase) ActiveProducer(ctx context.Context) {
-	uc.mq.ProducerStart(ctx)
-	//uc.mq.SndMsg(ctx, "test", "Hello RocketMQ Go Client!")
-}
-
-func (uc *GreeterUsecase) ActiveConsumer(ctx context.Context) {
-	uc.mq.DealMsg(ctx, "test")
-	uc.mq.ConsumerStart(ctx)
+	uc.mq.ClientsStart(ctx, MqConfig)
 }
 
 func (uc *GreeterUsecase) PublishMsg(ctx context.Context, tag string) {
 	/*
-					uc.mq.SndMsgSync(ctx, "test", "Hello RocketMQ Go Client snd msg sync!", tag)
-				uc.mq.SndMsgOneWay(ctx, "test", "Hello RocketMQ Go Client snd msg one way!", tag)
-			uc.mq.SndMsgBatch(ctx, "test", "Hello RocketMQ Go Client snd msg batch!", tag)
-		uc.mq.SndMsgAsync(ctx, "test", "Hello RocketMQ Go Client snd msg asynccccccccccccccccccc!", "bbbbbbbbbbbbatch")
-		uc.mq.SndMsgOrderly(ctx, "orderlyTest", "Hello RocketMQ Go Client snd msg orderly!", tag)
+							uc.mq.SndMsgSync(ctx, "test", "Hello RocketMQ Go Client snd msg sync!", tag)
+						uc.mq.SndMsgOneWay(ctx, "test", "Hello RocketMQ Go Client snd msg one way!", tag)
+					uc.mq.SndMsgBatch(ctx, "test", "Hello RocketMQ Go Client snd msg batch!", tag)
+				uc.mq.SndMsgAsync(ctx, "test", "Hello RocketMQ Go Client snd msg asynccccccccccccccccccc!", "bbbbbbbbbbbbatch")
+				uc.mq.SndMsgOrderly(ctx, "orderlyTest", "Hello RocketMQ Go Client snd msg orderly!", tag)
+			uc.mq.SndMsgDelay(ctx, "test", "Hello RocketMQ Go Client snd msg delay!", tag)
+		uc.mq.SndMsgTrans(ctx, "test", "Hello RocketMQ Go Client snd msg trans!", tag)
 	*/
-	uc.mq.SndMsgDelay(ctx, "test", "Hello RocketMQ Go Client snd msg delay!", tag)
+	uc.mq.SndMsgDelayAnyTime(ctx, "broadCastingTest", "Hello RocketMQ Go Client snd msg delay any time!", tag, 15)
 }
