@@ -4,7 +4,6 @@ import (
 	"context"
 
 	w1 "moonChat/feedInterface/api/helloworld/v1"
-	v1 "moonChat/mqInterface/api/msgQueue/v1"
 
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -14,25 +13,6 @@ var (
 	// ErrUserNotFound is user not found.
 	EwrUserNotFound = errors.NotFound(w1.ErrorReason_USER_NOT_FOUND.String(), "user not found")
 )
-
-// 改成从配置里读取
-var MqConfig = &v1.MQ_Config{
-	v1.Producer: &v1.MQ_Suber_Config{
-		GroupName:   "feedProducer_test",
-		NameSvrAddr: "127.0.0.1:9876",
-	},
-	v1.ProducerOrderly: &v1.MQ_Suber_Config{
-		GroupName:   "feedOrderlyProducer_test",
-		NameSvrAddr: "127.0.0.1:9876",
-	},
-	v1.TransProducer: &v1.MQ_Suber_Config{
-		GroupName:   "feedTransProducer_test",
-		NameSvrAddr: "127.0.0.1:9876",
-	},
-	v1.PushConsumer:      nil,
-	v1.ConsumerOrderly:   nil,
-	v1.BroadCastConsumer: nil,
-}
 
 // Greeter is a Greeter model.
 type Greeter struct {
@@ -57,8 +37,7 @@ type GreeterMQ interface {
 	SndMsgDelay(ctx context.Context, topic string, content string, tag string) error
 	SndMsgTrans(ctx context.Context, topic string, content string, tag string) error
 	SndMsgDelayAnyTime(ctx context.Context, topic string, content string, tag string, delayInterval int64) error
-	DealMsg(context.Context, string) error
-	ClientsStart(ctx context.Context, config *v1.MQ_Config) error
+	ClientsStart(ctx context.Context) error
 }
 
 // GreeterUsecase is a Greeter usecase.
@@ -80,7 +59,7 @@ func (uc *GreeterUsecase) CreateGreeter(ctx context.Context, g *Greeter) (*Greet
 }
 
 func (uc *GreeterUsecase) ActiveProducer(ctx context.Context) {
-	uc.mq.ClientsStart(ctx, MqConfig)
+	uc.mq.ClientsStart(ctx)
 }
 
 func (uc *GreeterUsecase) PublishMsg(ctx context.Context, tag string) {
