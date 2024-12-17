@@ -15,7 +15,7 @@ import (
 	"github.com/google/wire"
 )
 
-var ProviderSet = wire.NewSet(NewUserMQ)
+var ProviderSet = wire.NewSet(NewUserMQ, NewMQ)
 
 type MQ struct {
 	PushConsumer_1      rocketmq.PushConsumer
@@ -30,12 +30,12 @@ var Mq_Suber_arr = []rocketmq.PushConsumer{}
 
 func NewMQ() *MQ {
 	tmp := &MQ{
-		PushConsumer_1:      v1.NewConsumer("127.0.0.1:9876", "userCenterConsumer_test"),
-		PushConsumer_2:      v1.NewConsumer("127.0.0.1:9876", "userCenterConsumer_test"),
-		ConsumerOrderly_1:   v1.NewOrderlyConsumer("127.0.0.1:9876", "userCenterOrderlyConsumer_orderlyTest"),
-		ConsumerOrderly_2:   v1.NewOrderlyConsumer("127.0.0.1:9876", "userCenterOrderlyConsumer_orderlyTest"),
-		BroadCastConsumer_1: v1.NewBroadCastConsumer("127.0.0.1:9876", "userCenterBroadcastConsumer_broadcastTest"),
-		BroadCastConsumer_2: v1.NewBroadCastConsumer("127.0.0.1:9876", "userCenterBroadcastConsumer_broadcastTest"),
+		PushConsumer_1:      v1.NewConsumer("127.0.0.1:9876", "userCenterConsumer_test", "pushConsumer1"),
+		PushConsumer_2:      v1.NewConsumer("127.0.0.1:9876", "userCenterConsumer_test", "pushConsumer2"),
+		ConsumerOrderly_1:   v1.NewOrderlyConsumer("127.0.0.1:9876", "userCenterOrderlyConsumer_orderlyTest", "orderlyConsumer1"),
+		ConsumerOrderly_2:   v1.NewOrderlyConsumer("127.0.0.1:9876", "userCenterOrderlyConsumer_orderlyTest", "orderlyConsumer2"),
+		BroadCastConsumer_1: v1.NewBroadCastConsumer("127.0.0.1:9876", "userCenterBroadcastConsumer_broadcastTest", "broadcastConsumer1"),
+		BroadCastConsumer_2: v1.NewBroadCastConsumer("127.0.0.1:9876", "userCenterBroadcastConsumer_broadcastTest", "broadcastConsumer2"),
 	}
 
 	Mq_Suber_arr = append(Mq_Suber_arr, tmp.PushConsumer_1, tmp.PushConsumer_2, tmp.ConsumerOrderly_1, tmp.ConsumerOrderly_2, tmp.BroadCastConsumer_1, tmp.BroadCastConsumer_2)
@@ -49,9 +49,9 @@ type userMQ struct {
 }
 
 // NewGreeterRepo .
-func NewUserMQ(logger log.Logger) biz.UserMQ {
+func NewUserMQ(mq *MQ, logger log.Logger) biz.UserMQ {
 	return &userMQ{
-		mq:  NewMQ(),
+		mq:  mq,
 		log: log.NewHelper(logger),
 	}
 }
@@ -83,7 +83,7 @@ func (r *userMQ) DealMsgWithTimeElapse(ctx context.Context, topic string) error 
 	err := r.mq.PushConsumer_1.Subscribe(topic, selector, func(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 		for _, msg := range msgs {
 			t := time.Now().UnixNano()/int64(time.Millisecond) - msg.BornTimestamp
-			fmt.Printf("subscribe 1 Receive message[msgId=%s] %d ms later\n", msg.MsgId, t)
+			fmt.Printf("subscribe 1 Receive message[msg=%s] %d ms later\n", msg, t)
 		}
 
 		return consumer.ConsumeSuccess, nil
@@ -92,11 +92,12 @@ func (r *userMQ) DealMsgWithTimeElapse(ctx context.Context, topic string) error 
 	err = r.mq.PushConsumer_2.Subscribe(topic, selector, func(ctx context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 		for _, msg := range msgs {
 			t := time.Now().UnixNano()/int64(time.Millisecond) - msg.BornTimestamp
-			fmt.Printf("subscribe 2 Receive message[msgId=%s] %d ms later\n", msg.MsgId, t)
+			fmt.Printf("subscribe 2 Receive message[msg=%s] %d ms later\n", msg, t)
 		}
 
 		return consumer.ConsumeSuccess, nil
 	})
+
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
@@ -149,8 +150,8 @@ func (r *userMQ) DealMsgBroadCasting(ctx context.Context, topic string) error {
 func (r *userMQ) ClientsStart(ctx context.Context) error {
 	for idx, cli := range Mq_Suber_arr {
 		if err := cli.Start(); err != nil {
-			fmt.Println("userCenter consumer start err, idx: ", idx)
-			return err
+			fmt.Println("userCenter consumer start err, idx: ", idx, "err: ", err)
+			//return err
 		}
 	}
 

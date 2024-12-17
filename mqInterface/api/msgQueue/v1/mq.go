@@ -41,11 +41,12 @@ func NewMQ(c *MQ_Config) *MQ {
 }
 */
 
-func NewProducer(nameSvrAddr string, groupName string) rocketmq.Producer {
+func NewProducer(nameSvrAddr string, groupName string, instanceName string) rocketmq.Producer {
 	p, err := rocketmq.NewProducer(
 		producer.WithNameServer([]string{nameSvrAddr}),
 		producer.WithRetry(2),
 		producer.WithGroupName(groupName),
+		producer.WithInstanceName(instanceName),
 	)
 	if err != nil {
 		fmt.Printf("start producer error: %s", err.Error())
@@ -55,11 +56,12 @@ func NewProducer(nameSvrAddr string, groupName string) rocketmq.Producer {
 	return p
 }
 
-func NewConsumer(nameSvrAddr string, groupName string) rocketmq.PushConsumer {
+func NewConsumer(nameSvrAddr string, groupName string, instanceName string) rocketmq.PushConsumer {
 	c, err := rocketmq.NewPushConsumer(
 		consumer.WithNameServer([]string{nameSvrAddr}),
 		consumer.WithGroupName(groupName),
-		consumer.WithConsumerModel(consumer.BroadCasting),
+		consumer.WithConsumerModel(consumer.Clustering),
+		consumer.WithInstance(instanceName),
 	)
 	if err != nil {
 		fmt.Println("create consumer err", err.Error())
@@ -69,12 +71,13 @@ func NewConsumer(nameSvrAddr string, groupName string) rocketmq.PushConsumer {
 	return c
 }
 
-func NewOrderlyProducer(nameSvrAddr string, groupName string) rocketmq.Producer {
+func NewOrderlyProducer(nameSvrAddr string, groupName string, instanceName string) rocketmq.Producer {
 	c, err := rocketmq.NewProducer(
 		producer.WithNameServer([]string{nameSvrAddr}),
 		producer.WithGroupName(groupName),
 		producer.WithRetry(2),
 		producer.WithQueueSelector(producer.NewHashQueueSelector()),
+		producer.WithInstanceName(instanceName),
 	)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -84,13 +87,14 @@ func NewOrderlyProducer(nameSvrAddr string, groupName string) rocketmq.Producer 
 	return c
 }
 
-func NewOrderlyConsumer(nameSvrAddr string, groupName string) rocketmq.PushConsumer {
+func NewOrderlyConsumer(nameSvrAddr string, groupName string, instanceName string) rocketmq.PushConsumer {
 	c, err := rocketmq.NewPushConsumer(
 		consumer.WithNameServer([]string{nameSvrAddr}),
 		consumer.WithGroupName(groupName),
 		consumer.WithConsumerModel(consumer.Clustering),
 		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset),
 		consumer.WithConsumerOrder(true),
+		consumer.WithInstance(instanceName),
 	)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -100,12 +104,13 @@ func NewOrderlyConsumer(nameSvrAddr string, groupName string) rocketmq.PushConsu
 	return c
 }
 
-func NewBroadCastConsumer(nameSvrAddr string, groupName string) rocketmq.PushConsumer {
+func NewBroadCastConsumer(nameSvrAddr string, groupName string, instanceName string) rocketmq.PushConsumer {
 	c, err := rocketmq.NewPushConsumer(
 		consumer.WithGroupName(groupName),
 		consumer.WithNameServer([]string{nameSvrAddr}),
 		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset),
 		consumer.WithConsumerModel(consumer.BroadCasting),
+		consumer.WithInstance(instanceName),
 	)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -115,11 +120,12 @@ func NewBroadCastConsumer(nameSvrAddr string, groupName string) rocketmq.PushCon
 	return c
 }
 
-func NewTransProducer(nameSvrAddr string, listener primitive.TransactionListener) rocketmq.TransactionProducer {
+func NewTransProducer(nameSvrAddr string, groupName string, listener primitive.TransactionListener) rocketmq.TransactionProducer {
 	tp, err := rocketmq.NewTransactionProducer(
 		listener,
 		producer.WithNameServer([]string{nameSvrAddr}),
 		producer.WithRetry(2),
+		producer.WithGroupName(groupName),
 	)
 	if err != nil {
 		fmt.Println("create trans producer err: ", err.Error())

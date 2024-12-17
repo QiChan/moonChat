@@ -29,7 +29,10 @@ type GreeterRepo interface {
 }
 
 type GreeterMQ interface {
+	CreateTopic_Detail(ctx context.Context, topic, brokerAddr string) error
+	DelTopic_Detail(ctx context.Context, topic, brokerAddr string) error
 	SndMsgSync(context.Context, string, string, string) (string, error)
+	SndMsgSync_ano(context.Context, string, string, string) (string, error)
 	SndMsgAsync(ctx context.Context, topic string, content string, tag string) error
 	SndMsgOneWay(ctx context.Context, topic string, content string, tag string) error
 	SndMsgBatch(ctx context.Context, topic string, content string, tag string) error
@@ -64,13 +67,14 @@ func (uc *GreeterUsecase) ActiveProducer(ctx context.Context) {
 
 func (uc *GreeterUsecase) PublishMsg(ctx context.Context, tag string) {
 	/*
-							uc.mq.SndMsgSync(ctx, "test", "Hello RocketMQ Go Client snd msg sync!", tag)
-						uc.mq.SndMsgOneWay(ctx, "test", "Hello RocketMQ Go Client snd msg one way!", tag)
-					uc.mq.SndMsgBatch(ctx, "test", "Hello RocketMQ Go Client snd msg batch!", tag)
-				uc.mq.SndMsgAsync(ctx, "test", "Hello RocketMQ Go Client snd msg asynccccccccccccccccccc!", "bbbbbbbbbbbbatch")
-				uc.mq.SndMsgOrderly(ctx, "orderlyTest", "Hello RocketMQ Go Client snd msg orderly!", tag)
-			uc.mq.SndMsgDelay(ctx, "test", "Hello RocketMQ Go Client snd msg delay!", tag)
-		uc.mq.SndMsgTrans(ctx, "test", "Hello RocketMQ Go Client snd msg trans!", tag)
+		uc.mq.SndMsgDelay(ctx, "broadCastingTest", "Hello RocketMQ Go Client snd msg delay!", tag)
+		uc.mq.SndMsgDelayAnyTime(ctx, "broadCastingTest", "Hello RocketMQ Go Client snd msg delay any time!", tag, 15)
 	*/
-	uc.mq.SndMsgDelayAnyTime(ctx, "broadCastingTest", "Hello RocketMQ Go Client snd msg delay any time!", tag, 15)
+	//uc.mq.SndMsgOneWay(ctx, "test", "Hello RocketMQ Go Client snd msg one way!", tag)
+	//uc.mq.SndMsgAsync(ctx, "test", "Hello RocketMQ Go Client snd msg asynccccccccccccccccccc!", tag)
+	uc.mq.SndMsgSync(ctx, "test", "Hello RocketMQ Go Client snd msg sync!", tag)
+	//uc.mq.SndMsgSync_ano(ctx, "test", "Hello RocketMQ Go Client snd msg sync anooooooo!", tag)
+	//uc.mq.SndMsgTrans(ctx, "test", "Hello RocketMQ Go Client snd msg trans!", tag)
+	//uc.mq.SndMsgBatch(ctx, "test", "Hello RocketMQ Go Client snd msg batch!", tag)
+	//uc.mq.SndMsgOrderly(ctx, "orderlyTest", "Hello RocketMQ Go Client snd msg orderly!", tag)
 }
