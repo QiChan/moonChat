@@ -29,8 +29,6 @@ type GreeterRepo interface {
 }
 
 type GreeterMQ interface {
-	CreateTopic_Detail(ctx context.Context, topic, brokerAddr string) error
-	DelTopic_Detail(ctx context.Context, topic, brokerAddr string) error
 	SndMsgSync(context.Context, string, string, string) (string, error)
 	SndMsgSync_ano(context.Context, string, string, string) (string, error)
 	SndMsgAsync(ctx context.Context, topic string, content string, tag string) error
@@ -41,6 +39,7 @@ type GreeterMQ interface {
 	SndMsgTrans(ctx context.Context, topic string, content string, tag string) error
 	SndMsgDelayAnyTime(ctx context.Context, topic string, content string, tag string, delayInterval int64) error
 	ClientsStart(ctx context.Context) error
+	TopicsCreate(ctx context.Context) error
 }
 
 // GreeterUsecase is a Greeter usecase.
@@ -62,6 +61,7 @@ func (uc *GreeterUsecase) CreateGreeter(ctx context.Context, g *Greeter) (*Greet
 }
 
 func (uc *GreeterUsecase) ActiveProducer(ctx context.Context) {
+	uc.mq.TopicsCreate(ctx)
 	uc.mq.ClientsStart(ctx)
 }
 

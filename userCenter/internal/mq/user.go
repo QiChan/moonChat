@@ -24,11 +24,12 @@ type MQ struct {
 	ConsumerOrderly_2   rocketmq.PushConsumer
 	BroadCastConsumer_1 rocketmq.PushConsumer
 	BroadCastConsumer_2 rocketmq.PushConsumer
+	Adm                 *v1.MqAdm
 }
 
 var Mq_Suber_arr = []rocketmq.PushConsumer{}
 
-func NewMQ() *MQ {
+func NewMQ(adm *v1.MqAdm) *MQ {
 	tmp := &MQ{
 		PushConsumer_1:      v1.NewConsumer("127.0.0.1:9876", "userCenterConsumer_test", "pushConsumer1"),
 		PushConsumer_2:      v1.NewConsumer("127.0.0.1:9876", "userCenterConsumer_test", "pushConsumer2"),
@@ -36,6 +37,7 @@ func NewMQ() *MQ {
 		ConsumerOrderly_2:   v1.NewOrderlyConsumer("127.0.0.1:9876", "userCenterOrderlyConsumer_orderlyTest", "orderlyConsumer2"),
 		BroadCastConsumer_1: v1.NewBroadCastConsumer("127.0.0.1:9876", "userCenterBroadcastConsumer_broadcastTest", "broadcastConsumer1"),
 		BroadCastConsumer_2: v1.NewBroadCastConsumer("127.0.0.1:9876", "userCenterBroadcastConsumer_broadcastTest", "broadcastConsumer2"),
+		Adm:                 adm,
 	}
 
 	Mq_Suber_arr = append(Mq_Suber_arr, tmp.PushConsumer_1, tmp.PushConsumer_2, tmp.ConsumerOrderly_1, tmp.ConsumerOrderly_2, tmp.BroadCastConsumer_1, tmp.BroadCastConsumer_2)
@@ -155,5 +157,12 @@ func (r *userMQ) ClientsStart(ctx context.Context) error {
 		}
 	}
 
+	return nil
+}
+
+func (r *userMQ) TopicsCreate(ctx context.Context) error {
+	r.mq.Adm.CreateTopic("test", v1.BrokerAddr)
+	r.mq.Adm.CreateTopic("orderlyTest", v1.BrokerAddr)
+	r.mq.Adm.CreateTopic("broadCastingTest", v1.BrokerAddr)
 	return nil
 }

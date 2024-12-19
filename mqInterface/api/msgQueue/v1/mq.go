@@ -41,12 +41,26 @@ func NewMQ(c *MQ_Config) *MQ {
 }
 */
 
+var (
+	AccessKey = "RocketMQ"
+	SecretKey = "123456"
+	TraceCfg  = &primitive.TraceConfig{
+		Access:   primitive.Local,
+		Resolver: primitive.NewPassthroughResolver([]string{"127.0.0.1:9876"}),
+	}
+)
+
 func NewProducer(nameSvrAddr string, groupName string, instanceName string) rocketmq.Producer {
 	p, err := rocketmq.NewProducer(
 		producer.WithNameServer([]string{nameSvrAddr}),
 		producer.WithRetry(2),
 		producer.WithGroupName(groupName),
 		producer.WithInstanceName(instanceName),
+		producer.WithCredentials(primitive.Credentials{
+			AccessKey: AccessKey,
+			SecretKey: SecretKey,
+		}),
+		producer.WithTrace(TraceCfg),
 	)
 	if err != nil {
 		fmt.Printf("start producer error: %s", err.Error())
@@ -62,6 +76,11 @@ func NewConsumer(nameSvrAddr string, groupName string, instanceName string) rock
 		consumer.WithGroupName(groupName),
 		consumer.WithConsumerModel(consumer.Clustering),
 		consumer.WithInstance(instanceName),
+		consumer.WithCredentials(primitive.Credentials{
+			AccessKey: AccessKey,
+			SecretKey: SecretKey,
+		}),
+		consumer.WithTrace(TraceCfg),
 	)
 	if err != nil {
 		fmt.Println("create consumer err", err.Error())
@@ -78,6 +97,11 @@ func NewOrderlyProducer(nameSvrAddr string, groupName string, instanceName strin
 		producer.WithRetry(2),
 		producer.WithQueueSelector(producer.NewHashQueueSelector()),
 		producer.WithInstanceName(instanceName),
+		producer.WithCredentials(primitive.Credentials{
+			AccessKey: AccessKey,
+			SecretKey: SecretKey,
+		}),
+		producer.WithTrace(TraceCfg),
 	)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -95,6 +119,11 @@ func NewOrderlyConsumer(nameSvrAddr string, groupName string, instanceName strin
 		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset),
 		consumer.WithConsumerOrder(true),
 		consumer.WithInstance(instanceName),
+		consumer.WithCredentials(primitive.Credentials{
+			AccessKey: AccessKey,
+			SecretKey: SecretKey,
+		}),
+		consumer.WithTrace(TraceCfg),
 	)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -111,6 +140,11 @@ func NewBroadCastConsumer(nameSvrAddr string, groupName string, instanceName str
 		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset),
 		consumer.WithConsumerModel(consumer.BroadCasting),
 		consumer.WithInstance(instanceName),
+		consumer.WithCredentials(primitive.Credentials{
+			AccessKey: AccessKey,
+			SecretKey: SecretKey,
+		}),
+		consumer.WithTrace(TraceCfg),
 	)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -126,6 +160,11 @@ func NewTransProducer(nameSvrAddr string, groupName string, listener primitive.T
 		producer.WithNameServer([]string{nameSvrAddr}),
 		producer.WithRetry(2),
 		producer.WithGroupName(groupName),
+		producer.WithCredentials(primitive.Credentials{
+			AccessKey: AccessKey,
+			SecretKey: SecretKey,
+		}),
+		producer.WithTrace(TraceCfg),
 	)
 	if err != nil {
 		fmt.Println("create trans producer err: ", err.Error())

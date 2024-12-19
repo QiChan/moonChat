@@ -10,7 +10,7 @@ import (
 )
 
 var ProviderSet = wire.NewSet(NewMqAdm)
-var BrokerAddr = "127.0.0.1:9876"
+var BrokerAddr = "192.168.2.196:10911"
 
 type MqAdm struct {
 	Adm admin.Admin
@@ -19,6 +19,10 @@ type MqAdm struct {
 func NewMqAdm() *MqAdm {
 	adm, err := admin.NewAdmin(
 		admin.WithResolver(primitive.NewPassthroughResolver([]string{BrokerAddr})),
+		admin.WithCredentials(primitive.Credentials{
+			AccessKey: AccessKey,
+			SecretKey: SecretKey,
+		}),
 		//admin.WithCredentials()
 	)
 
@@ -26,11 +30,6 @@ func NewMqAdm() *MqAdm {
 		fmt.Println("NewMqAdm error: ", err)
 		panic(err)
 	}
-
-	/*
-		tmp := new(MqAdm)
-		tmp.Adm = adm
-	*/
 
 	return &MqAdm{
 		Adm: adm,

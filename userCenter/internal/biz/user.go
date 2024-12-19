@@ -21,6 +21,7 @@ type UserMQ interface {
 	DealMsgOrderly(ctx context.Context, topic string) error
 	DealMsgBroadCasting(ctx context.Context, topic string) error
 	ClientsStart(ctx context.Context) error
+	TopicsCreate(ctx context.Context) error
 }
 
 type UserUsecase struct {
@@ -38,6 +39,7 @@ func (uc *UserUsecase) CreateUserInfo() *UserInfo {
 }
 
 func (uc *UserUsecase) ActiveConsumer(ctx context.Context) {
+	uc.mq.TopicsCreate(ctx)
 	//uc.mq.DealMsg(ctx, "test")
 	uc.mq.DealMsgWithTimeElapse(ctx, "test")
 	uc.mq.DealMsgOrderly(ctx, "orderlyTest")

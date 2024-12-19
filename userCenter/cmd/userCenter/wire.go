@@ -6,6 +6,7 @@
 package main
 
 import (
+	v1 "moonChat/mqInterface/api/msgQueue/v1"
 	"moonChat/userCenter/internal/biz"
 	"moonChat/userCenter/internal/conf"
 	"moonChat/userCenter/internal/data"
@@ -20,5 +21,5 @@ import (
 
 // wireApp init kratos application.
 func wireApp(*conf.Server, *conf.Data, log.Logger) (*kratos.App, func(), error) {
-	panic(wire.Build(server.ProviderSet, data.ProviderSet, biz.ProviderSet, service.ProviderSet, mq.ProviderSet, newApp))
+	panic(wire.Build(server.ProviderSet, data.ProviderSet, biz.ProviderSet, service.ProviderSet, mq.ProviderSet, v1.ProviderSet, newApp))
 }

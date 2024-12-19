@@ -57,15 +57,6 @@ func NewGreeterMQ(mq *MQ, logger log.Logger) biz.GreeterMQ {
 		mq:  mq,
 		log: log.NewHelper(logger),
 	}
-
-}
-
-func (r *greeterMQ) CreateTopic_Detail(ctx context.Context, topic, brokerAddr string) error {
-	return r.mq.Adm.CreateTopic(topic, brokerAddr)
-}
-
-func (r *greeterMQ) DelTopic_Detail(ctx context.Context, topic, brokerAddr string) error {
-	return r.mq.Adm.DeleteTopic(topic, brokerAddr)
 }
 
 func (r *greeterMQ) SndMsgSync(ctx context.Context, topic string, content string, tag string) (string, error) {
@@ -218,5 +209,12 @@ func (r *greeterMQ) ClientsStart(ctx context.Context) error {
 		//return err
 	}
 
+	return nil
+}
+
+func (r *greeterMQ) TopicsCreate(ctx context.Context) error {
+	r.mq.Adm.CreateTopic("test", v1.BrokerAddr)
+	r.mq.Adm.CreateTopic("orderlyTest", v1.BrokerAddr)
+	r.mq.Adm.CreateTopic("broadCastingTest", v1.BrokerAddr)
 	return nil
 }
