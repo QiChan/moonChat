@@ -2,14 +2,29 @@ package handler
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
+	wb "moonChat/gateway/websocket"
+
+	"github.com/gin-gonic/gin"
 	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"github.com/go-kratos/kratos/v2/registry"
+	"github.com/gorilla/websocket"
 	"github.com/hashicorp/consul/api"
 )
 
-var ConsulAddr = "127.0.0.1:8500"
+var (
+	ConsulAddr = "127.0.0.1:8500"
+
+	WsPool *wb.ConnectionPool
+
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true // 允许所有来源的WebSocket连接，生产环境中应该更严格
+		},
+	}
+)
 
 func GetGrpcAddrs(inputs []string) []string {
 	var grpcAddrs []string
@@ -36,4 +51,13 @@ func GetSrvInstances(ctx context.Context, srvName string) []*registry.ServiceIns
 	instances, _ := discovery.GetService(ctx, srvName)
 
 	return instances
+}
+
+func UpgradeHttpToWs(c *gin.Context) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	WsPool.HandleConnection(conn)
 }

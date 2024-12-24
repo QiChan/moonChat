@@ -40,7 +40,7 @@ func GetUserHandler(c *gin.Context) {
 	}
 	defer close()
 
-	if err = c.ShouldBindJSON(&fromData); err != nil {
+	if err = c.ShouldBindJSON(&jsondata.GetUserReq); err != nil {
 		c.JSON(500, gin.H{"parse json error: ": err.Error()})
 	}
 
@@ -56,6 +56,6 @@ func GetUserHandler(c *gin.Context) {
 		"status":  "posted",
 		"tag":     resp.Tag,
 		"message": resp.Msg,
-		"nick":    fromData.Nick,
+		"nick":    jsondata.GetUserReq.Nick,
 	})
 }
